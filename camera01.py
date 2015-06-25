@@ -4,12 +4,16 @@ import time
 
 camera = picamera.PiCamera()
 
-camera.capture("photos/image.jpg")
+camera.start_recording('photos/video.h264')
+time.sleep(5)
+camera.stop_recording()
+
+
+#for x in range(100):
+#    filename = "photos/image" + str(x) + ".jpg"
+#    camera.capture(filename)
+#    time.sleep(1)
 
 camera.hflip = True
 camera.vflip = True
-
-camera.start_preview()
-time.sleep(30)
-camera.stop_preview()
 
