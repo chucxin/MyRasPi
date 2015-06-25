@@ -2,6 +2,9 @@ from Adafruit_CharLCD import Adafruit_CharLCD
 import time
 import RPi.GPIO as GPIO
 
+#test
+
+
 lcd = Adafruit_CharLCD()
 
 lcd.begin(20, 4)
@@ -10,7 +13,7 @@ buttonUp = 11
 buttonDown = 13
 buttonEnter = 15
 buttonBack = 37
-Buzzer = 7
+Buzzer = 40
 
 GPIO.setmode(GPIO.BOARD)
 
@@ -32,8 +35,8 @@ AMIN =0
 ASEC =0
 Darrow=0
 On=0
-
-
+Sound=0
+LastSound=time.time()
 
 
 
@@ -111,6 +114,11 @@ def display4Screen():
     time.sleep(1)
     lcd.clear()
     screen=0
+def display5Screen():
+    lcd.setCursor(3,0)
+    lcd.message("WAKE UP!")
+    lcd.setCursor(3,2)
+    lcd.message(time.strftime("%H:%M:%S", time.localtime(time.time())))
 
  
 def button():
@@ -126,9 +134,10 @@ def button():
     global arrow
     global Darrow
     global On
+    global Sound
     if GPIO.input(buttonEnter) == False:
         time_now_0 = time.time()
-        if (time_now_0 - time_stamp_0) >= 0.1:
+        if (time_now_0 - time_stamp_0) >= 0.13:
             print "Enter"
             if screen==0:
                 screen=1
@@ -146,11 +155,15 @@ def button():
                 elif Darrow==2:
                     screen=3
                     On=1
+            elif screen==5:
+                screen=0
+                Sound=0
+                On=0  
             lcd.clear()
             time_stamp_0 = time.time()
     elif GPIO.input(buttonBack) == False:
         time_now_1 = time.time()
-        if (time_now_1 - time_stamp_1) >= 0.1:
+        if (time_now_1 - time_stamp_1) >= 0.13:
             print "Back"
             if screen == 1:
                 screen=0
@@ -161,13 +174,14 @@ def button():
                     Darrow=0
                 elif Darrow==2:
  		    Darrow=1
-            lcd.clear()
-    
+            elif screen==5:
+                screen=0
+                Sound=0
             lcd.clear()
         time_stamp_1 = time.time()
     elif GPIO.input(buttonUp) == False:
         time_now_2 =time.time()
-        if (time_now_2 - time_stamp_2) >=0.1:
+        if (time_now_2 - time_stamp_2) >=0.13:
             print "Up"
  	    if screen ==1:
                 if arrow >0:
@@ -194,7 +208,7 @@ def button():
         time_stamp_2 = time.time()
     elif GPIO.input(buttonDown) == False:
         time_now_3 = time.time()
-        if (time_now_3 - time_stamp_3) >= 0.1:
+        if (time_now_3 - time_stamp_3) >= 0.13:
             print "Down"
             if screen ==1:
                 if arrow <1:
@@ -221,13 +235,28 @@ def button():
         time_stamp_3 = time.time()
 def Alarm():
     global On
+    global Sound
+    global screen
+    global LastSound
     HRN =int(time.strftime("%H",time.localtime(time.time())))
     MINN=int(time.strftime("%M",time.localtime(time.time())))
     SECN=int(time.strftime("%S",time.localtime(time.time())))
     if AHR==HRN and AMIN==MINN and ASEC==SECN and On==1:
-        GPIO.output(Buzzer, GPIO.HIGH)
+        Sound = 1
+        lcd.clear()
+    if Sound==1:
+        if time.time()-LastSound>=0.05:
+            GPIO.output(Buzzer, GPIO.HIGH)
+            screen=5
+            LastSound=time.time()
+        else:
+            GPIO.output(Buzzer, GPIO.LOW)
         print "alarm"
-    print HRN, MINN, SECN, AHR, AMIN, ASEC    
+    elif Sound==0:
+        GPIO.output(Buzzer, GPIO.LOW)
+        
+    print HRN, MINN, SECN, AHR, AMIN, ASEC, Sound    
+
 
 while 1:
     Alarm()
@@ -242,5 +271,6 @@ while 1:
         display3Screen()
     elif screen==4:
         display4Screen()
-
+    elif screen==5:
+        display5Screen()
 
