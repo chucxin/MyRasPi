@@ -4,12 +4,12 @@ import time
 
 camera = picamera.PiCamera()
 
-camera.capture("photos/image.jpg")
+camera.capture("image.jpg")
 
 camera.hflip = True
-camera.vflip = True
+camera.vfli
 
 camera.start_preview()
-time.sleep(30)
+time.sleep(4)
 camera.stop_preview()
 
