@@ -1,6 +1,5 @@
 import picamera
 import time
-import PIL
 
 
 
