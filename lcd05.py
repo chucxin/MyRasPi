@@ -30,13 +30,18 @@ time_stamp_3 = time.time()
 screen = 0
 arrow = 0
 selected = 0
-AHR = 0
-AMIN =0
-ASEC =0
-Darrow=0
-On=0
+Aselected =0
+
+AHR = [0,0,0,0,0,0,0,0,0,0]
+AMIN =[0,0,0,0,0,0,0,0,0,0]
+ASEC =[0,0,0,0,0,0,0,0,0,0]
+Darrow=0 
+AArrow = 0
+On=[0,0,0,0,0,0,0,0,0,0]
 Sound=0
+Scroll=0
 LastSound=time.time()
+
 
 
 
@@ -45,9 +50,10 @@ def display0Screen():
     lcd.message(time.strftime("%Y-%m-%d %A", time.localtime(time.time())))
     lcd.setCursor(0,2)
     lcd.message(time.strftime("%H:%M:%S",time.localtime(time.time())))
-    if On==1:
-        lcd.setCursor(19,3)
-        lcd.message("A")
+    for x in range(10):
+        if On[x]==1:
+            lcd.setCursor(9+x,3)
+            lcd.message(str(x+1))
     print "0 screen"
     print screen
 
@@ -67,24 +73,27 @@ def display1Screen():
 
 
 def display2Screen():
-    lcd.setCursor(3,0)
+    lcd.setCursor(5,0)
+    lcd.message("Alarm ")
+    lcd.message(str(Aselected + 1))
+    lcd.setCursor(3,1)
     lcd.message("HR   MIN   SEC")
     lcd.setCursor(3,2)
-    if AHR < 10:
+    if AHR[Aselected] < 10:
         lcd.message("0")
-    lcd.message(str(AHR))
+    lcd.message(str(AHR[Aselected]))
     lcd.setCursor(6,2)
     lcd.message(":")
     lcd.setCursor(8,2)
-    if AMIN <10:
+    if AMIN[Aselected] <10:
         lcd.message("0")
-    lcd.message(str(AMIN))
+    lcd.message(str(AMIN[Aselected]))
     lcd.setCursor(12,2)
     lcd.message(":")
     lcd.setCursor(15,2)
-    if ASEC <10:
+    if ASEC[Aselected] <10:
         lcd.message("0")
-    lcd.message(str(ASEC))
+    lcd.message(str(ASEC[Aselected]))
     if Darrow == 0:
         lcd.setCursor(2,2)
         lcd.message(">")
@@ -119,6 +128,24 @@ def display5Screen():
     lcd.message("WAKE UP!")
     lcd.setCursor(3,2)
     lcd.message(time.strftime("%H:%M:%S", time.localtime(time.time())))
+def display6Screen():
+    for x in range(0, 4):   
+        lcd.setCursor(3,x)
+        lcd.message("Alarm ")
+        lcd.message(str(x + Scroll+ 1))
+        lcd.setCursor(11,x)
+        lcd.message("(")
+        if AHR[x+Scroll] < 10:
+            lcd.message("0")
+        lcd.message(str(AHR[x + Scroll]))
+        lcd.message(":")
+        if AMIN[x+Scroll] < 10:
+            lcd.message("0")
+        lcd.message(str(AMIN[x + Scroll]))
+        lcd.message(")")
+    lcd.setCursor(0,AArrow)
+    lcd.message("-->")    
+
 
  
 def button():
@@ -135,6 +162,9 @@ def button():
     global Darrow
     global On
     global Sound
+    global AArrow
+    global Scroll
+    global Aselected
     if GPIO.input(buttonEnter) == False:
         time_now_0 = time.time()
         if (time_now_0 - time_stamp_0) >= 0.13:
@@ -143,7 +173,8 @@ def button():
                 screen=1
             elif screen==1:
                 if selected==0:
-                    screen=2         
+                    screen=6
+                    Darrow=0         
 		elif selected==1:
 		    screen=4
 		    On=0
@@ -154,11 +185,13 @@ def button():
                     Darrow=2
                 elif Darrow==2:
                     screen=3
-                    On=1
+                    On[Aselected]=1
             elif screen==5:
                 screen=0
                 Sound=0
                 On=0  
+            elif screen == 6:
+                screen=2
             lcd.clear()
             time_stamp_0 = time.time()
     elif GPIO.input(buttonBack) == False:
@@ -177,6 +210,8 @@ def button():
             elif screen==5:
                 screen=0
                 Sound=0
+            elif screen==6:
+                screen=1
             lcd.clear()
         time_stamp_1 = time.time()
     elif GPIO.input(buttonUp) == False:
@@ -190,20 +225,28 @@ def button():
                     selected=selected - 1    
 	    elif screen==2:
                 if Darrow==0:
-                    if AHR<23:
-                        AHR=AHR + 1
-                    elif AHR ==23:
-                        AHR=0      
+                    if AHR[Aselected]<23:
+                        AHR[Aselected]=AHR[Aselected] + 1
+                    elif AHR[Aselected] ==23:
+                        AHR[Aselected]=0      
                 elif Darrow==1:
-                    if AMIN<59:
-                        AMIN=AMIN + 1
-                    elif AMIN ==59:
-                        AMIN=0
+                    if AMIN[Aselected]<59:
+                        AMIN[Aselected]=AMIN[Aselected] + 1
+                    elif AMIN[Aselected] ==59:
+                        AMIN[Aselected]=0
                 elif Darrow==2:
-                    if ASEC<59:
-                        ASEC=ASEC + 1
-                    elif ASEC ==59:
-                        ASEC=0
+                    if ASEC[Aselected]<59:
+                        ASEC[Aselected]=ASEC[Aselected] + 1
+                    elif ASEC[Aselected] ==59:
+                        ASEC[Aselected]=0
+            elif screen==6:
+                if Scroll>0 and AArrow ==0:
+                    Scroll=Scroll -1
+                if AArrow>0:
+                    AArrow = AArrow -1
+                if Aselected>0:
+                    Aselected=Aselected -1
+                print Aselected
             lcd.clear()       
         time_stamp_2 = time.time()
     elif GPIO.input(buttonDown) == False:
@@ -217,20 +260,27 @@ def button():
  		    selected=selected + 1
             elif screen==2:
                 if Darrow==0:
-                    if AHR>0:
-                        AHR=AHR -1 
-                    elif AHR ==0:
-                        AHR=23
+                    if AHR[Aselected]>0:
+                        AHR[Aselected]=AHR[Aselected] -1 
+                    elif AHR[Aselected] ==0:
+                        AHR[Aselected]=23
                 elif Darrow==1:
-                    if AMIN>0:
-                        AMIN=AMIN -1
-                    elif AMIN ==0:
-                        AMIN=59
+                    if AMIN[Aselected]>0:
+                        AMIN[Aselected]=AMIN[Aselected] -1
+                    elif AMIN[Aselected] ==0:
+                        AMIN[Aselected]=59
                 elif Darrow==2:
-                    if ASEC>0:
-                        ASEC=ASEC -1
-                    elif ASEC ==0:
-                        ASEC=59
+                    if ASEC[Aselected]>0:
+                        ASEC[Aselected]=ASEC[Aselected] -1
+                    elif ASEC[Aselected] ==0:
+                        ASEC[Aselected]=59
+            elif screen ==6:
+                if Scroll<6 and AArrow ==3:
+                    Scroll=Scroll +1
+                if AArrow<3:
+                    AArrow = AArrow +1
+                if Aselected<9:
+                    Aselected = Aselected +1
             lcd.clear()
         time_stamp_3 = time.time()
 def Alarm():
@@ -273,4 +323,6 @@ while 1:
         display4Screen()
     elif screen==5:
         display5Screen()
+    elif screen==6:
+        display6Screen()
 
