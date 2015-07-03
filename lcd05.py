@@ -20,7 +20,7 @@ GPIO.setmode(GPIO.BOARD)
 Button = [11, 13, 15, 37]
 for x in Button:
     GPIO.setup(x, GPIO.IN, GPIO.PUD_UP)
-GPIO.setup(Buzzer, GPIO.OUT, initial=GPIO.LOW)    
+GPIO.setup(Buzzer, GPIO.OUT, initial=GPIO.HIGH)    
 
 time_stamp_0 = time.time()
 time_stamp_1 = time.time()
@@ -42,6 +42,16 @@ Sound=0
 Scroll=0
 LastSound=time.time()
 
+for x in range(10):
+    myfile=open("Alarm"+str(x)+".al", "r")
+    fl = myfile.readlines()
+
+    On[x]=int(fl[0])
+    AHR[x]=int(fl[1])
+    AMIN[x]=int(fl[2])
+    ASEC[x]=int(fl[3])
+    myfile.close()
+ 
 
 
 
@@ -145,7 +155,23 @@ def display6Screen():
         lcd.message(")")
     lcd.setCursor(0,AArrow)
     lcd.message("-->")    
-
+def display7Screen():
+    for x in range(0, 4):
+        lcd.setCursor(2,x)
+        lcd.message("Alarm Off")
+        lcd.message(str(x + Scroll+ 1))
+        lcd.setCursor(14,x)
+        lcd.message("(")
+        if AHR[x+Scroll] < 10:
+            lcd.message("0")
+        lcd.message(str(AHR[x + Scroll]))
+        lcd.message(":")
+        if AMIN[x+Scroll] < 10:
+            lcd.message("0")
+        lcd.message(str(AMIN[x + Scroll]))
+        lcd.message(")")
+    lcd.setCursor(0,AArrow)
+    lcd.message("->")
 
  
 def button():
@@ -176,7 +202,7 @@ def button():
                     screen=6
                     Darrow=0         
 		elif selected==1:
-		    screen=4
+		    screen=7
 		    On=0
             elif screen==2:
                 if Darrow==0:
@@ -186,12 +212,18 @@ def button():
                 elif Darrow==2:
                     screen=3
                     On[Aselected]=1
+                    myfile = open("Alarm"+str(Aselected)+".al","w")
+                    myfile.write(str(On[Aselected])+"\n")
+                    myfile.write(str(AHR[Aselected])+"\n")
+                    myfile.write(str(AMIN[Aselected])+"\n")
+                    myfile.write(str(ASEC[Aselected])+"\n")
+                    myfile.close()
             elif screen==5:
                 screen=0
                 Sound=0
-                On=0  
             elif screen == 6:
                 screen=2
+
             lcd.clear()
             time_stamp_0 = time.time()
     elif GPIO.input(buttonBack) == False:
@@ -288,24 +320,29 @@ def Alarm():
     global Sound
     global screen
     global LastSound
+    global Nowtime
     HRN =int(time.strftime("%H",time.localtime(time.time())))
     MINN=int(time.strftime("%M",time.localtime(time.time())))
     SECN=int(time.strftime("%S",time.localtime(time.time())))
-    if AHR==HRN and AMIN==MINN and ASEC==SECN and On==1:
-        Sound = 1
-        lcd.clear()
+    for x in range(10):
+        if AHR[x]==HRN and AMIN[x]==MINN and ASEC[x]==SECN and On[x]==1:
+            Sound = 1
+            Nowtime=time.time()
+            lcd.clear()
     if Sound==1:
-        if time.time()-LastSound>=0.05:
-            GPIO.output(Buzzer, GPIO.HIGH)
-            screen=5
-            LastSound=time.time()
-        else:
-            GPIO.output(Buzzer, GPIO.LOW)
-        print "alarm"
+         GPIO.output(Buzzer, GPIO.LOW)
+         screen=5 
+         if time.time()-Nowtime > 10:
+            Sound=0
+            lcd.clear()
+            screen=0
     elif Sound==0:
-        GPIO.output(Buzzer, GPIO.LOW)
+        GPIO.output(Buzzer, GPIO.HIGH)
         
     print HRN, MINN, SECN, AHR, AMIN, ASEC, Sound    
+
+
+
 
 
 while 1:
@@ -325,4 +362,5 @@ while 1:
         display5Screen()
     elif screen==6:
         display6Screen()
-
+    elif screen==7:
+        display7Screen()
