@@ -62,7 +62,7 @@ def display0Screen():
     lcd.message(time.strftime("%H:%M:%S",time.localtime(time.time())))
     for x in range(10):
         if On[x]==1:
-            lcd.setCursor(9+x,3)
+            lcd.setCursor((0+x) * 2,3)
             lcd.message(str(x+1))
     print "0 screen"
     print screen
@@ -153,6 +153,9 @@ def display6Screen():
             lcd.message("0")
         lcd.message(str(AMIN[x + Scroll]))
         lcd.message(")")
+        if On[x+Scroll]==1:
+            lcd.setCursor(19,x)
+            lcd.message("A")
     lcd.setCursor(0,AArrow)
     lcd.message("-->")    
 def display7Screen():
@@ -160,7 +163,7 @@ def display7Screen():
         lcd.setCursor(2,x)
         lcd.message("Alarm Off")
         lcd.message(str(x + Scroll+ 1))
-        lcd.setCursor(14,x)
+        lcd.setCursor(13,x)
         lcd.message("(")
         if AHR[x+Scroll] < 10:
             lcd.message("0")
@@ -197,13 +200,20 @@ def button():
             print "Enter"
             if screen==0:
                 screen=1
+                selected=0
+                arrow= 0
             elif screen==1:
                 if selected==0:
                     screen=6
-                    Darrow=0         
+                    Darrow=0
+                    Aselected=0
+                    Scroll = 0
+                    AArrow = 0         
 		elif selected==1:
 		    screen=7
-		    On=0
+		    Aselected=0
+                    Scroll = 0
+                    AArrow = 0
             elif screen==2:
                 if Darrow==0:
                     Darrow=1
@@ -223,7 +233,15 @@ def button():
                 Sound=0
             elif screen == 6:
                 screen=2
-
+            elif screen==7:
+                On[Aselected]=0
+                myfile = open("Alarm"+str(Aselected)+".al","w")
+                myfile.write(str(On[Aselected])+"\n")
+                myfile.write(str(AHR[Aselected])+"\n")
+                myfile.write(str(AMIN[Aselected])+"\n")
+                myfile.write(str(ASEC[Aselected])+"\n")
+                myfile.close()
+                screen=4
             lcd.clear()
             time_stamp_0 = time.time()
     elif GPIO.input(buttonBack) == False:
@@ -244,6 +262,8 @@ def button():
                 Sound=0
             elif screen==6:
                 screen=1
+            elif screen == 7:
+                screen = 1
             lcd.clear()
         time_stamp_1 = time.time()
     elif GPIO.input(buttonUp) == False:
@@ -279,6 +299,15 @@ def button():
                 if Aselected>0:
                     Aselected=Aselected -1
                 print Aselected
+            elif screen==7:
+                if Scroll>0 and AArrow ==0:
+                    Scroll=Scroll -1
+                if AArrow>0:
+                    AArrow = AArrow -1
+                if Aselected>0:
+                    Aselected=Aselected -1
+                print Aselected
+
             lcd.clear()       
         time_stamp_2 = time.time()
     elif GPIO.input(buttonDown) == False:
@@ -307,6 +336,13 @@ def button():
                     elif ASEC[Aselected] ==0:
                         ASEC[Aselected]=59
             elif screen ==6:
+                if Scroll<6 and AArrow ==3:
+                    Scroll=Scroll +1
+                if AArrow<3:
+                    AArrow = AArrow +1
+                if Aselected<9:
+                    Aselected = Aselected +1
+            elif screen==7:
                 if Scroll<6 and AArrow ==3:
                     Scroll=Scroll +1
                 if AArrow<3:
